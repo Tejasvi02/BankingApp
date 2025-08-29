@@ -72,7 +72,17 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-
+        <!-- Security core (managed version via Boot parent) -->
+		<dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		
+		<!-- JSP security tags: <sec:authorize> ... -->
+		<dependency>
+		  <groupId>org.springframework.security</groupId>
+		  <artifactId>spring-security-taglibs</artifactId>
+		</dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

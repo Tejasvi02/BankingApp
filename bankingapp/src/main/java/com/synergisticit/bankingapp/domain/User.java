@@ -6,6 +6,7 @@ import java.util.List;
 import com.synergisticit.bankingapp.auditing.Auditable;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -40,7 +41,7 @@ public class User extends Auditable {
     @NotEmpty
     private String email;
     
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name="user_role", joinColumns={ @JoinColumn(name="user_id")}, inverseJoinColumns= {@JoinColumn(name="role_id")})
     List<Role> roles = new ArrayList<>();
     

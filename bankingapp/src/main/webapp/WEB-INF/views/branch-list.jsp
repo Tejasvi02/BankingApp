@@ -1,4 +1,5 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
@@ -7,11 +8,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 </head>
 <body class="container py-4">
+<jsp:include page="/WEB-INF/views/header.jsp"/>
 <c:set var="cxt" value="${pageContext.request.contextPath}" />
 
 <h2 class="mb-4 text-primary">Branches</h2>
 
 <!-- ===== Top: Form Card (full width) ===== -->
+<sec:authorize access="hasRole('ADMIN')">
 <div class="card shadow-sm mb-4">
   <div class="card-header">
     <strong>${branch.branchId == null ? "Add New Branch" : "Edit Branch"}</strong>
@@ -62,6 +65,7 @@
     </form:form>
   </div>
 </div>
+</sec:authorize>
 
 <!-- ===== Bottom: List + Pagination ===== -->
 <div class="card shadow-sm">
