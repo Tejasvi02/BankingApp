@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import com.synergisticit.bankingapp.auditing.Auditable;
 import com.synergisticit.bankingapp.enums.Gender;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,6 +22,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
+@Entity
 public class Customer extends Auditable {
 
 

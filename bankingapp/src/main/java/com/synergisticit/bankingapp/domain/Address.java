@@ -8,11 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Embeddable
+
 @NoArgsConstructor
 @Getter
 @Setter
-public class Address extends Auditable {
+@Embeddable
+public class Address { //have removed auditing here cos of error
 	private String addressLine1;
 	private String addressLine2;
 	private String city;
