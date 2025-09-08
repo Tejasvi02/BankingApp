@@ -26,7 +26,7 @@ public class RoleController {
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, Model model) {
+    public String edit(@PathVariable int id, Model model) {
         model.addAttribute("role", roleRepo.findById(id).orElseThrow());
         model.addAttribute("roles", roleRepo.findAll());
         return "role-form";
@@ -43,7 +43,7 @@ public class RoleController {
     }
 
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Long id) {
+    public String delete(@PathVariable int id) {
         roleRepo.deleteById(id);
         return "redirect:/roles";
     }

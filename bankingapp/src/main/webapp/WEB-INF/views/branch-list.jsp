@@ -101,7 +101,9 @@
             </a>
           </th>
           <th>Address</th>
-          <th style="width: 140px;">Actions</th>
+          <sec:authorize access="hasRole('ADMIN')">
+      		<th>Actions</th>
+    	  </sec:authorize>
         </tr>
       </thead>
       <tbody>
@@ -116,18 +118,16 @@
               ${b.branchAddress.city}, ${b.branchAddress.state},
               ${b.branchAddress.country} - ${b.branchAddress.zip}
             </c:if>
-          </td>
-          <td>
-            <a class="btn btn-sm btn-warning"
-               href="${cxt}/branches/edit/${b.branchId}?page=${currentPage}&size=${size}&sortField=${sortField}&sortDir=${sortDir}">
-              Edit
-            </a>
-            <a class="btn btn-sm btn-danger"
-               href="${cxt}/branches/delete/${b.branchId}"
-               onclick="return confirm('Delete this branch?');">
-              Delete
-            </a>
-          </td>
+          </td> 
+		  <sec:authorize access="hasRole('ADMIN')">
+		    <td>
+		      <a class="btn btn-sm btn-warning"
+		         href="${pageContext.request.contextPath}/branches/edit/${branch.branchId}">Edit</a>
+		      <a class="btn btn-sm btn-danger"
+		         href="${pageContext.request.contextPath}/branches/delete/${branch.branchId}"
+		         onclick="return confirm('Delete this branch?');">Delete</a>
+		    </td>
+		  </sec:authorize>
         </tr>
       </c:forEach>
       </tbody>

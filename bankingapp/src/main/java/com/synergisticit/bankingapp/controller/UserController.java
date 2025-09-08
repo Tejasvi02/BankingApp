@@ -4,14 +4,14 @@ import com.synergisticit.bankingapp.domain.Role;
 import com.synergisticit.bankingapp.domain.User;
 import com.synergisticit.bankingapp.repository.RoleRepository;
 import com.synergisticit.bankingapp.repository.UserRepository;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -26,104 +26,139 @@ public class UserController {
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
 
-    @GetMapping
-    public String userPage(Authentication auth, Model model) {
-        boolean isAdmin = isAdmin(auth);
-        model.addAttribute("isAdmin", isAdmin);
-
-        if (isAdmin) {
-            model.addAttribute("users", userRepo.findAll());
-            model.addAttribute("allRoles", roleRepo.findAll());
-            model.addAttribute("user", new User());
-        } else {
-            User me = userRepo.findByUsername(auth.getName()).orElseThrow();
-            model.addAttribute("user", me);
+    // ===== Helpers =====
+    private boolean isAdmin(Authentication auth) {
+        if (auth == null) return false;
+        for (GrantedAuthority ga : auth.getAuthorities()) {
+            if ("ROLE_ADMIN".equals(ga.getAuthority())) return true;
         }
-        return "user-form";
+        return false;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/edit/{id}")
-    public String editUser(@PathVariable Integer id, Model model) {
-        User u = userRepo.findById(id).orElseThrow();
-        model.addAttribute("isAdmin", true);
-        model.addAttribute("user", u);
+    private Role getUserRoleOrThrow() {
+        return roleRepo.findByRoleName("USER")
+                .orElseThrow(() -> new IllegalStateException("Missing USER role in DB. Seed it first."));
+    }
+
+    // ===== List + form =====
+    @GetMapping
+    public String listAndForm(@RequestParam(value = "id", required = false) Integer id,
+                              Model model,
+                              Authentication auth) {
+
+        User formUser;
+        if (id != null && id > 0) {
+            formUser = userRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("User not found id=" + id));
+        } else {
+            formUser = new User(); // userId defaults to 0 (primitive)
+        }
+
+        model.addAttribute("user", formUser);
         model.addAttribute("users", userRepo.findAll());
         model.addAttribute("allRoles", roleRepo.findAll());
+        model.addAttribute("isAdmin", isAdmin(auth));
         return "user-form";
     }
 
-    @PostMapping("/save")
-    public String saveUser(@Valid @ModelAttribute("user") User formUser,
-                           BindingResult binding,
-                           Authentication auth,
-                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds,
-                           Model model) {
-
-        boolean isAdmin = isAdmin(auth);
-
-        if (!isAdmin && formUser.getUserId() != 0) {
-            User me = userRepo.findByUsername(auth.getName()).orElseThrow();
-            if (!Objects.equals(me.getUserId(), formUser.getUserId())) {
-                binding.reject("forbidden", "You can only edit your own profile.");
-            }
-        }
-
-        if (binding.hasErrors()) {
-            model.addAttribute("isAdmin", isAdmin);
-            if (isAdmin) {
-                model.addAttribute("users", userRepo.findAll());
-                model.addAttribute("allRoles", roleRepo.findAll());
-            }
-            return "user-form";
-        }
-
-        User toSave;
-        if (formUser.getUserId() == 0) {
-            toSave = new User();
-        } else {
-            toSave = userRepo.findById(formUser.getUserId()).orElseThrow();
-        }
-
-        toSave.setUsername(formUser.getUsername());
-        toSave.setEmail(formUser.getEmail());
-
-        if (formUser.getUserId() == 0 || (formUser.getPassword() != null && !formUser.getPassword().isBlank())) {
-            toSave.setPassword(passwordEncoder.encode(formUser.getPassword()));
-        }
-
-        if (isAdmin) {
-            List<Role> roles = (roleIds == null || roleIds.isEmpty())
-                    ? ensureDefaultUserRole()
-                    : roleIds.stream()
-                             .map(roleRepo::findById)
-                             .filter(Optional::isPresent)
-                             .map(Optional::get)
-                             .collect(Collectors.toList());
-            toSave.setRoles(roles);
-        } else {
-            toSave.setRoles(ensureDefaultUserRole());
-        }
-
-        userRepo.save(toSave);
-        return "redirect:/users";
+    // ===== Edit shortcut =====
+    @GetMapping("/edit/{id}")
+    public String edit(@PathVariable int id) {
+        return "redirect:/users?id=" + id;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // ===== Delete (ADMIN only in SecurityConfig; if not, also check here) =====
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Integer id) {
+    public String delete(@PathVariable int id, Authentication auth) {
+        // You can also protect via SecurityConfig. Keeping a simple guard here:
+        if (!isAdmin(auth)) {
+            return "redirect:/users?error=forbidden";
+        }
         userRepo.deleteById(id);
-        return "redirect:/users";
+        return "redirect:/users?deleted";
     }
 
-    private boolean isAdmin(Authentication auth) {
-        return auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    // ===== Save (Create/Update) =====
+    @PostMapping("/save")
+    public String save(@ModelAttribute("user") User incoming,
+                       @RequestParam(value = "roleIds", required = false) List<Integer> roleIds,
+                       Authentication auth,
+                       HttpServletRequest request,
+                       Model model) {
+
+        boolean admin = isAdmin(auth);
+        int id = incoming.getUserId(); // primitive int
+        boolean isNew = (id == 0);
+
+        // Normalize username
+        String username = StringUtils.trimWhitespace(incoming.getUsername());
+        if (!StringUtils.hasText(username)) {
+            return withFormError("Username is required", incoming, admin, model);
+        }
+
+        // Uniqueness checks
+        Optional<User> existingByName = userRepo.findByUsername(username);
+        if (isNew) {
+            if (existingByName.isPresent()) {
+                return withFormError("Username already exists", incoming, admin, model);
+            }
+        } else {
+            User dbUser = userRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("User not found id=" + id));
+            // If changing username, ensure no other user uses it
+            if (!dbUser.getUsername().equals(username) && existingByName.isPresent()) {
+                return withFormError("Username already exists", incoming, admin, model);
+            }
+        }
+
+        // Load target entity (new or existing)
+        User target = isNew ? new User() : userRepo.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("User not found id=" + id));
+
+        // Set username + email
+        target.setUsername(username);
+        target.setEmail(StringUtils.trimWhitespace(incoming.getEmail()));
+
+        // Password handling
+        String rawPassword = StringUtils.trimWhitespace(incoming.getPassword());
+        if (isNew) {
+            if (!StringUtils.hasText(rawPassword)) {
+                return withFormError("Password is required for new user", incoming, admin, model);
+            }
+            target.setPassword(passwordEncoder.encode(rawPassword));
+        } else {
+            // If provided, re-encode and replace. If blank, keep old.
+            if (StringUtils.hasText(rawPassword)) {
+                target.setPassword(passwordEncoder.encode(rawPassword));
+            }
+        }
+
+        // Roles
+        List<Role> newRoles;
+        if (admin) {
+            if (roleIds != null && !roleIds.isEmpty()) {
+                newRoles = roleRepo.findAllById(roleIds);
+            } else {
+                // If admin didn't pick any, default USER
+                newRoles = Collections.singletonList(getUserRoleOrThrow());
+            }
+        } else {
+            // Non-admins can only assign USER
+            newRoles = Collections.singletonList(getUserRoleOrThrow());
+        }
+        target.setRoles(newRoles);
+
+        userRepo.save(target);
+        return "redirect:/users?saved";
     }
 
-    private List<Role> ensureDefaultUserRole() {
-        Role userRole = roleRepo.findByRoleName("USER")
-                .orElseThrow(() -> new IllegalStateException("Missing USER role"));
-        return new ArrayList<>(List.of(userRole));
+    // ===== Utilities =====
+    private String withFormError(String message, User formUser, boolean admin, Model model) {
+        model.addAttribute("user", formUser);
+        model.addAttribute("users", userRepo.findAll());
+        model.addAttribute("allRoles", roleRepo.findAll());
+        model.addAttribute("isAdmin", admin);
+        model.addAttribute("error", message);
+        return "user-form";
     }
 }
