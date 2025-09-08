@@ -20,41 +20,71 @@
     <strong>${branch.branchId == null ? "Add New Branch" : "Edit Branch"}</strong>
   </div>
   <div class="card-body">
-    <form:form action="${cxt}/branches" method="post" modelAttribute="branch" class="row g-3">
+
+    <form:form action="${cxt}/branches" method="post" modelAttribute="branch" class="row g-3" id="branchForm">
+      <!-- Global error summary only after submit -->
+      <c:if test="${submitted}">
+        <form:errors path="*" element="div" cssClass="alert alert-danger mb-2" id="formErrorSummary"/>
+      </c:if>
+
       <form:hidden path="branchId"/>
 
       <div class="col-12 col-md-6">
         <label class="form-label">Branch Name</label>
-        <form:input path="branchName" class="form-control" required="true"/>
+        <form:input path="branchName" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchName" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
 
       <div class="col-12"><h6 class="text-secondary mt-2 mb-1">Address</h6></div>
 
       <div class="col-12 col-md-6">
         <label class="form-label">Address Line 1</label>
-        <form:input path="branchAddress.addressLine1" class="form-control" required="true"/>
+        <form:input path="branchAddress.addressLine1" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchAddress.addressLine1" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
+
       <div class="col-12 col-md-6">
         <label class="form-label">Address Line 2</label>
-        <form:input path="branchAddress.addressLine2" class="form-control"/>
+        <form:input path="branchAddress.addressLine2" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchAddress.addressLine2" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
 
       <div class="col-12 col-md-4">
         <label class="form-label">City</label>
-        <form:input path="branchAddress.city" class="form-control" required="true"/>
+        <form:input path="branchAddress.city" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchAddress.city" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
+
       <div class="col-12 col-md-4">
         <label class="form-label">State</label>
-        <form:input path="branchAddress.state" class="form-control" required="true"/>
+        <form:input path="branchAddress.state" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchAddress.state" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
+
       <div class="col-12 col-md-4">
         <label class="form-label">Country</label>
-        <form:input path="branchAddress.country" class="form-control" required="true"/>
+        <form:input path="branchAddress.country" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchAddress.country" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
 
       <div class="col-12 col-md-3">
         <label class="form-label">Zip</label>
-        <form:input path="branchAddress.zip" class="form-control" required="true"/>
+        <form:input path="branchAddress.zip" cssClass="form-control field"/>
+        <c:if test="${submitted}">
+          <form:errors path="branchAddress.zip" cssClass="text-danger small field-error"/>
+        </c:if>
       </div>
 
       <div class="col-12">
@@ -71,19 +101,19 @@
 <div class="card shadow-sm">
   <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
     <strong>Branches</strong>
-	   <form class="d-inline-flex align-items-center gap-2" method="get" action="${cxt}/branches">
-	    <input type="hidden" name="page" value="${currentPage}" />
-	    <input type="hidden" name="sortField" value="${sortField}" />
-	    <input type="hidden" name="sortDir" value="${sortDir}" />
-	
-	    <label class="form-label mb-0 me-2">Page size</label>
-	    <select class="form-select form-select-sm w-auto" name="size" onchange="this.form.submit()">
-	        <option ${size==5 ? 'selected' : ''}>5</option>
-	        <option ${size==10 ? 'selected' : ''}>10</option>
-	        <option ${size==20 ? 'selected' : ''}>20</option>
-	        <option ${size==50 ? 'selected' : ''}>50</option>
-	    </select>
-	</form>
+    <form class="d-inline-flex align-items-center gap-2" method="get" action="${cxt}/branches">
+      <input type="hidden" name="page" value="${currentPage}" />
+      <input type="hidden" name="sortField" value="${sortField}" />
+      <input type="hidden" name="sortDir" value="${sortDir}" />
+
+      <label class="form-label mb-0 me-2">Page size</label>
+      <select class="form-select form-select-sm w-auto" name="size" onchange="this.form.submit()">
+        <option ${size==5 ? 'selected' : ''}>5</option>
+        <option ${size==10 ? 'selected' : ''}>10</option>
+        <option ${size==20 ? 'selected' : ''}>20</option>
+        <option ${size==50 ? 'selected' : ''}>50</option>
+      </select>
+    </form>
   </div>
 
   <div class="table-responsive">
@@ -102,8 +132,8 @@
           </th>
           <th>Address</th>
           <sec:authorize access="hasRole('ADMIN')">
-      		<th>Actions</th>
-    	  </sec:authorize>
+            <th>Actions</th>
+          </sec:authorize>
         </tr>
       </thead>
       <tbody>
@@ -118,16 +148,16 @@
               ${b.branchAddress.city}, ${b.branchAddress.state},
               ${b.branchAddress.country} - ${b.branchAddress.zip}
             </c:if>
-          </td> 
-		  <sec:authorize access="hasRole('ADMIN')">
-		    <td>
-		      <a class="btn btn-sm btn-warning"
-		         href="${pageContext.request.contextPath}/branches/edit/${branch.branchId}">Edit</a>
-		      <a class="btn btn-sm btn-danger"
-		         href="${pageContext.request.contextPath}/branches/delete/${branch.branchId}"
-		         onclick="return confirm('Delete this branch?');">Delete</a>
-		    </td>
-		  </sec:authorize>
+          </td>
+          <sec:authorize access="hasRole('ADMIN')">
+            <td>
+              <a class="btn btn-sm btn-warning"
+                 href="${cxt}/branches/edit/${b.branchId}">Edit</a>
+              <a class="btn btn-sm btn-danger"
+                 href="${cxt}/branches/delete/${b.branchId}"
+                 onclick="return confirm('Delete this branch?');">Delete</a>
+            </td>
+          </sec:authorize>
         </tr>
       </c:forEach>
       </tbody>
@@ -159,6 +189,30 @@
     </nav>
   </div>
 </div>
+
+<script>
+  // Hide field error as soon as user types & hide global summary if no errors remain
+  (function() {
+    const form = document.getElementById('branchForm');
+    if (!form) return;
+
+    const hideIfNoErrors = () => {
+      const anyVisible = Array.from(form.querySelectorAll('.field-error'))
+        .some(el => el.offsetParent !== null);
+      const summary = document.getElementById('formErrorSummary');
+      if (summary && !anyVisible) summary.style.display = 'none';
+    };
+
+    form.querySelectorAll('.field').forEach(input => {
+      input.addEventListener('input', () => {
+        // hide the next sibling error if present
+        const err = input.parentElement.querySelector('.field-error');
+        if (err) err.style.display = 'none';
+        hideIfNoErrors();
+      });
+    });
+  })();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
