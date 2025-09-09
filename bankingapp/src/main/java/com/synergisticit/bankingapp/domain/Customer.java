@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import com.synergisticit.bankingapp.auditing.Auditable;
 import com.synergisticit.bankingapp.enums.Gender;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,6 +42,7 @@ public class Customer extends Auditable {
     private LocalDate customerDOB;
 
 
+    @Embedded
     private Address customerAddress;
 
 

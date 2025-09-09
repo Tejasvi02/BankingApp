@@ -48,6 +48,9 @@ public class SecurityConfig {
                 // Admin-only
                 .requestMatchers("/roles/**").hasRole("ADMIN")
                 .requestMatchers("/branches/new", "/branches/edit/**", "/branches/delete/**").hasRole("ADMIN")
+                
+                //admin and manager
+                .requestMatchers("/customers/**").hasAnyRole("ADMIN","MANAGER")
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()

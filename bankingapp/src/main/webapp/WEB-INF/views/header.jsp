@@ -1,4 +1,3 @@
-<!-- /WEB-INF/views/_header.jsp -->
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
@@ -23,6 +22,13 @@
         <sec:authorize access="!hasRole('ADMIN')">
           <li class="nav-item">
             <a class="nav-link" href="${pageContext.request.contextPath}/branches">Branch Listing</a>
+          </li>
+        </sec:authorize>
+
+        <!-- NEW: Customers link (for ADMIN or MANAGER) -->
+        <sec:authorize access="hasAnyRole('ADMIN','MANAGER')">
+          <li class="nav-item">
+            <a class="nav-link" href="${pageContext.request.contextPath}/customers">Customers</a>
           </li>
         </sec:authorize>
 
