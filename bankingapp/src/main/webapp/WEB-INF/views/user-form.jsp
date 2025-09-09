@@ -10,32 +10,47 @@
 </head>
 <body class="container py-3">
   <jsp:include page="/WEB-INF/views/header.jsp"/>
+  <c:set var="cxt" value="${pageContext.request.contextPath}"/>
 
   <c:choose>
     <c:when test="${isAdmin}">
-      <%-- ADMIN VIEW --%>
+      <%-- ===================== ADMIN VIEW ===================== --%>
       <div class="row g-4">
         <div class="col-md-4">
-          <div class="card">
+          <div class="card shadow-sm">
             <div class="card-header">Add / Edit User</div>
             <div class="card-body">
-              <form:form method="post" action="${pageContext.request.contextPath}/users/save"
-                         modelAttribute="user" class="row g-3">
+              <form:form method="post" action="${cxt}/users/save"
+                         modelAttribute="user" class="row g-3" id="userFormAdmin">
                 <form:hidden path="userId"/>
+
+                <%-- Global summary only after submit --%>
+                <c:if test="${submitted}">
+                  <form:errors path="*" element="div" cssClass="alert alert-danger" id="userFormSummary"/>
+                </c:if>
 
                 <div class="col-12">
                   <label class="form-label">Username</label>
-                  <form:input path="username" class="form-control" required="true"/>
+                  <form:input path="username" cssClass="form-control uf-field"/>
+                  <c:if test="${submitted}">
+                    <form:errors path="username" cssClass="text-danger small uf-error"/>
+                  </c:if>
                 </div>
 
                 <div class="col-12">
                   <label class="form-label">Password (leave blank to keep)</label>
-                  <form:password path="password" class="form-control"/>
+                  <form:password path="password" cssClass="form-control uf-field"/>
+                  <c:if test="${submitted}">
+                    <form:errors path="password" cssClass="text-danger small uf-error"/>
+                  </c:if>
                 </div>
 
                 <div class="col-12">
                   <label class="form-label">Email</label>
-                  <form:input path="email" class="form-control" required="true"/>
+                  <form:input path="email" cssClass="form-control uf-field"/>
+                  <c:if test="${submitted}">
+                    <form:errors path="email" cssClass="text-danger small uf-error"/>
+                  </c:if>
                 </div>
 
                 <div class="col-12">
@@ -47,11 +62,10 @@
                       <label class="form-check-label">${r.roleName}</label>
                     </div>
                   </c:forEach>
+                  <c:if test="${submitted}">
+                    <form:errors path="roles" cssClass="text-danger small d-block uf-error"/>
+                  </c:if>
                 </div>
-
-                <!-- If CSRF is enabled, include token:
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                -->
 
                 <div class="col-12">
                   <button class="btn btn-primary w-100">Save</button>
@@ -62,69 +76,84 @@
         </div>
 
         <div class="col-md-8">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th style="width: 150px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <c:forEach var="u" items="${users}">
-                <tr>
-                  <td>${u.userId}</td>
-                  <td>${u.username}</td>
-                  <td>${u.email}</td>
-                  <td>
-                    <c:forEach var="r" items="${u.roles}">
-                      <span class="badge text-bg-secondary me-1">${r.roleName}</span>
-                    </c:forEach>
-                  </td>
-                  <td>
-                    <a class="btn btn-sm btn-warning"
-                       href="${pageContext.request.contextPath}/users/edit/${u.userId}">Edit</a>
-                    <a class="btn btn-sm btn-danger"
-                       href="${pageContext.request.contextPath}/users/delete/${u.userId}"
-                       onclick="return confirm('Delete user?');">Delete</a>
-                  </td>
-                </tr>
-              </c:forEach>
-            </tbody>
-          </table>
+          <div class="card shadow-sm">
+            <div class="card-header">All Users</div>
+            <div class="card-body p-0">
+              <table class="table table-striped mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th style="width: 150px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <c:forEach var="u" items="${users}">
+                    <tr>
+                      <td>${u.userId}</td>
+                      <td>${u.username}</td>
+                      <td>${u.email}</td>
+                      <td>
+                        <c:forEach var="r" items="${u.roles}">
+                          <span class="badge text-bg-secondary me-1">${r.roleName}</span>
+                        </c:forEach>
+                      </td>
+                      <td>
+                        <a class="btn btn-sm btn-warning"
+                           href="${cxt}/users/edit/${u.userId}">Edit</a>
+                        <a class="btn btn-sm btn-danger"
+                           href="${cxt}/users/delete/${u.userId}"
+                           onclick="return confirm('Delete user?');">Delete</a>
+                      </td>
+                    </tr>
+                  </c:forEach>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </c:when>
 
     <c:otherwise>
-      <%-- NON-ADMIN VIEW --%>
-      <div class="card">
+      <%-- ===================== NON-ADMIN VIEW (My Profile) ===================== --%>
+      <div class="card shadow-sm">
         <div class="card-header">My Profile</div>
         <div class="card-body">
-          <form:form method="post" action="${pageContext.request.contextPath}/users/save"
-                     modelAttribute="user" class="row g-3">
+          <form:form method="post" action="${cxt}/users/save"
+                     modelAttribute="user" class="row g-3" id="userFormSelf">
             <form:hidden path="userId"/>
+
+            <%-- Summary only after submit --%>
+            <c:if test="${submitted}">
+              <form:errors path="*" element="div" cssClass="alert alert-danger" id="userFormSummarySelf"/>
+            </c:if>
 
             <div class="col-12">
               <label class="form-label">Username</label>
-              <form:input path="username" class="form-control" readonly="true"/>
-            </div>
-
-            <div class="col-12">
-              <label class="form-label">Password (leave blank to keep)</label>
-              <form:password path="password" class="form-control"/>
+              <form:input path="username" cssClass="form-control" readonly="true"/>
+              <c:if test="${submitted}">
+                <form:errors path="username" cssClass="text-danger small"/>
+              </c:if>
             </div>
 
             <div class="col-12">
               <label class="form-label">Email</label>
-              <form:input path="email" class="form-control" required="true"/>
+              <form:input path="email" cssClass="form-control" readonly="true"/>
+              <c:if test="${submitted}">
+                <form:errors path="email" cssClass="text-danger small"/>
+              </c:if>
             </div>
 
-            <!-- If CSRF is enabled:
-            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-            -->
+            <div class="col-12">
+              <label class="form-label">New Password (leave blank to keep)</label>
+              <form:password path="password" cssClass="form-control uf-field"/>
+              <c:if test="${submitted}">
+                <form:errors path="password" cssClass="text-danger small uf-error"/>
+              </c:if>
+            </div>
 
             <div class="col-12">
               <button class="btn btn-primary">Save</button>
@@ -134,5 +163,32 @@
       </div>
     </c:otherwise>
   </c:choose>
+
+  <script>
+    // Hide inline errors as soon as user types; hide summary if no inline errors remain
+    (function () {
+      const wireForm = (formId, fieldSelector, errorSelector, summaryId) => {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        const hideSummaryIfNoErrors = () => {
+          const anyVisible = Array.from(form.querySelectorAll(errorSelector))
+            .some(el => el.offsetParent !== null);
+          const summary = document.getElementById(summaryId);
+          if (summary && !anyVisible) summary.style.display = 'none';
+        };
+        form.querySelectorAll(fieldSelector).forEach(inp => {
+          inp.addEventListener('input', () => {
+            const err = inp.parentElement.querySelector(errorSelector);
+            if (err) err.style.display = 'none';
+            hideSummaryIfNoErrors();
+          });
+        });
+      };
+      // Admin form
+      wireForm('userFormAdmin', '.uf-field', '.uf-error', 'userFormSummary');
+      // Self profile form
+      wireForm('userFormSelf', '.uf-field', '.uf-error', 'userFormSummarySelf');
+    })();
+  </script>
 </body>
 </html>
