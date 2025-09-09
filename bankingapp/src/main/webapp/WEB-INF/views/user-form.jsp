@@ -1,4 +1,3 @@
-<!-- /WEB-INF/views/user-form.jsp -->
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <html>
@@ -24,7 +23,6 @@
                          modelAttribute="user" class="row g-3" id="userFormAdmin">
                 <form:hidden path="userId"/>
 
-                <%-- Global summary only after submit --%>
                 <c:if test="${submitted}">
                   <form:errors path="*" element="div" cssClass="alert alert-danger" id="userFormSummary"/>
                 </c:if>
@@ -62,9 +60,6 @@
                       <label class="form-check-label">${r.roleName}</label>
                     </div>
                   </c:forEach>
-                  <c:if test="${submitted}">
-                    <form:errors path="roles" cssClass="text-danger small d-block uf-error"/>
-                  </c:if>
                 </div>
 
                 <div class="col-12">
@@ -101,10 +96,8 @@
                         </c:forEach>
                       </td>
                       <td>
-                        <a class="btn btn-sm btn-warning"
-                           href="${cxt}/users/edit/${u.userId}">Edit</a>
-                        <a class="btn btn-sm btn-danger"
-                           href="${cxt}/users/delete/${u.userId}"
+                        <a class="btn btn-sm btn-warning" href="${cxt}/users/edit/${u.userId}">Edit</a>
+                        <a class="btn btn-sm btn-danger" href="${cxt}/users/delete/${u.userId}"
                            onclick="return confirm('Delete user?');">Delete</a>
                       </td>
                     </tr>
@@ -118,59 +111,99 @@
     </c:when>
 
     <c:otherwise>
-      <%-- ===================== NON-ADMIN VIEW (My Profile) ===================== --%>
-      <div class="card shadow-sm">
-        <div class="card-header">My Profile</div>
-        <div class="card-body">
-          <form:form method="post" action="${cxt}/users/save"
-                     modelAttribute="user" class="row g-3" id="userFormSelf">
-            <form:hidden path="userId"/>
+      <%-- ===================== NON-ADMIN VIEW ===================== --%>
 
-            <%-- Summary only after submit --%>
-            <c:if test="${submitted}">
-              <form:errors path="*" element="div" cssClass="alert alert-danger" id="userFormSummarySelf"/>
-            </c:if>
+      <c:if test="${pwdChanged}">
+        <div class="alert alert-success">Password changed successfully.</div>
+      </c:if>
 
-            <div class="col-12">
-              <label class="form-label">Username</label>
-              <form:input path="username" cssClass="form-control" readonly="true"/>
-              <c:if test="${submitted}">
-                <form:errors path="username" cssClass="text-danger small"/>
-              </c:if>
+      <div class="row g-4">
+        <%-- Card 1: Add User (role forced to USER on server) --%>
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-header">Add User</div>
+            <div class="card-body">
+              <form:form method="post" action="${cxt}/users/save"
+                         modelAttribute="user" class="row g-3" id="userFormAddByNonAdmin">
+                <form:hidden path="userId"/>
+
+                <c:if test="${submitted}">
+                  <form:errors path="*" element="div" cssClass="alert alert-danger"/>
+                </c:if>
+
+                <div class="col-12">
+                  <label class="form-label">Username</label>
+                  <form:input path="username" cssClass="form-control uf-field"/>
+                  <c:if test="${submitted}">
+                    <form:errors path="username" cssClass="text-danger small uf-error"/>
+                  </c:if>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Password</label>
+                  <form:password path="password" cssClass="form-control uf-field"/>
+                  <c:if test="${submitted}">
+                    <form:errors path="password" cssClass="text-danger small uf-error"/>
+                  </c:if>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Email</label>
+                  <form:input path="email" cssClass="form-control uf-field"/>
+                  <c:if test="${submitted}">
+                    <form:errors path="email" cssClass="text-danger small uf-error"/>
+                  </c:if>
+                </div>
+
+                <div class="col-12">
+                  <button class="btn btn-primary w-100">Save</button>
+                </div>
+              </form:form>
             </div>
-
-            <div class="col-12">
-              <label class="form-label">Email</label>
-              <form:input path="email" cssClass="form-control" readonly="true"/>
-              <c:if test="${submitted}">
-                <form:errors path="email" cssClass="text-danger small"/>
-              </c:if>
-            </div>
-
-            <div class="col-12">
-              <label class="form-label">New Password (leave blank to keep)</label>
-              <form:password path="password" cssClass="form-control uf-field"/>
-              <c:if test="${submitted}">
-                <form:errors path="password" cssClass="text-danger small uf-error"/>
-              </c:if>
-            </div>
-
-            <div class="col-12">
-              <button class="btn btn-primary">Save</button>
-            </div>
-          </form:form>
+          </div>
         </div>
+
+        <%-- Card 2: My Profile (change password only) --%>
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-header">My Profile</div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input class="form-control" value="${me.username}" readonly/>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input class="form-control" value="${me.email}" readonly/>
+              </div>
+
+              <form method="post" action="${cxt}/users/change-password" class="row g-3">
+                <div class="col-12">
+                  <label class="form-label">New Password</label>
+                  <input type="password" name="newPassword" class="form-control"/>
+                  <c:if test="${not empty pwdError}">
+                    <div class="text-danger small">${pwdError}</div>
+                  </c:if>
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-outline-primary">Change Password</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
       </div>
     </c:otherwise>
   </c:choose>
 
   <script>
-    // Hide inline errors as soon as user types; hide summary if no inline errors remain
     (function () {
       const wireForm = (formId, fieldSelector, errorSelector, summaryId) => {
         const form = document.getElementById(formId);
         if (!form) return;
         const hideSummaryIfNoErrors = () => {
+          if (!summaryId) return;
           const anyVisible = Array.from(form.querySelectorAll(errorSelector))
             .some(el => el.offsetParent !== null);
           const summary = document.getElementById(summaryId);
@@ -184,10 +217,8 @@
           });
         });
       };
-      // Admin form
       wireForm('userFormAdmin', '.uf-field', '.uf-error', 'userFormSummary');
-      // Self profile form
-      wireForm('userFormSelf', '.uf-field', '.uf-error', 'userFormSummarySelf');
+      wireForm('userFormAddByNonAdmin', '.uf-field', '.uf-error', null);
     })();
   </script>
 </body>
