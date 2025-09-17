@@ -30,6 +30,9 @@
           <li class="nav-item">
             <a class="nav-link" href="${pageContext.request.contextPath}/customers">Customers</a>
           </li>
+          <li class="nav-item">
+		    <a class="nav-link" href="${pageContext.request.contextPath}/accounts">Accounts</a>
+		  </li>
         </sec:authorize>
 
       </ul>

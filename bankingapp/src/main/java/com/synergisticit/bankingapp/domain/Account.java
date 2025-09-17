@@ -2,6 +2,8 @@ package com.synergisticit.bankingapp.domain;
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.synergisticit.bankingapp.auditing.Auditable;
 import com.synergisticit.bankingapp.enums.AccountType;
 
@@ -34,7 +36,7 @@ public class Account extends Auditable{
 
     private String accountHolder;
 
-
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate accountDateOpened;
 
 

@@ -1,6 +1,7 @@
 package com.synergisticit.bankingapp.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 
@@ -13,4 +14,6 @@ public interface BranchService {
     Branch getBranchById(Long id);
     List<Branch> getAllBranches();
     Page<Branch> getBranches(int page, int size, String sortField, String sortDir);
+    //List<Branch> findAll();
+    Optional<Branch> findById(Long id);
 }
